@@ -1,10 +1,20 @@
 package com.pitchcat.vijavabrowser;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Rectangle;
-import java.awt.Toolkit;
+import com.vmware.vim25.mo.ManagedEntity;
+import com.vmware.vim25.mo.ServerConnection;
+import com.vmware.vim25.mo.ServiceInstance;
+
+import javax.swing.*;
+import javax.swing.event.TreeExpansionEvent;
+import javax.swing.event.TreeWillExpandListener;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.ExpandVetoException;
+import javax.swing.tree.TreePath;
+import javax.tools.*;
+import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
@@ -14,39 +24,8 @@ import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.TreeSet;
-
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTable;
-import javax.swing.JTree;
-import javax.swing.ListSelectionModel;
-import javax.swing.SwingUtilities;
-import javax.swing.ToolTipManager;
-import javax.swing.TransferHandler;
-import javax.swing.event.TreeExpansionEvent;
-import javax.swing.event.TreeWillExpandListener;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumn;
-import javax.swing.tree.DefaultTreeCellRenderer;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.ExpandVetoException;
-import javax.swing.tree.TreePath;
-import javax.tools.DiagnosticCollector;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileManager;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardLocation;
-import javax.tools.ToolProvider;
-
-import com.vmware.vim25.mo.ManagedEntity;
-import com.vmware.vim25.mo.ServerConnection;
-import com.vmware.vim25.mo.ServiceInstance;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Application implements TreeWillExpandListener {
 
@@ -352,7 +331,7 @@ public class Application implements TreeWillExpandListener {
 								if (result != null) {
 									VITreeNodeSearch newNode = new VITreeNodeSearch(
 											dialog.getSearchMethod(), dialog
-													.getSearchMethod(), result);
+											.getSearchMethod(), result);
 									DefaultTreeModel model = (DefaultTreeModel) jTree
 											.getModel();
 									model.insertNodeInto(newNode, viTreeNode,
@@ -426,10 +405,16 @@ public class Application implements TreeWillExpandListener {
 			}
 		};
 		try {
+			Pattern pattern = Pattern.compile(".*\\((.*)\\)");
 			for (JavaFileObject f : jfm.list(StandardLocation.CLASS_PATH,
 					"com.vmware.vim25.mo", kind, false)) {
 				String className = f.getName();
 				if (!className.equals("ManagedEntity.class")) {
+					Matcher matcher = pattern.matcher(className);
+					if(matcher.matches()) {
+						className = matcher.group(1);
+						className = className.substring(className.lastIndexOf("/")+1);
+					}
 					try {
 						Class<?> c = Class
 								.forName("com.vmware.vim25.mo."
