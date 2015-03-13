@@ -4,15 +4,13 @@ import com.vmware.vim25.mo.ManagedEntity;
 import com.vmware.vim25.mo.ServerConnection;
 import com.vmware.vim25.mo.ServiceInstance;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeWillExpandListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
-import javax.swing.tree.DefaultTreeCellRenderer;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.ExpandVetoException;
-import javax.swing.tree.TreePath;
+import javax.swing.tree.*;
 import javax.tools.*;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
@@ -21,6 +19,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.TreeSet;
@@ -520,6 +519,18 @@ public class Application implements TreeWillExpandListener {
 			JComponent c = (JComponent) super.getTreeCellRendererComponent(
 					tree, value, sel, expanded, leaf, row, hasFocus);
 			c.setToolTipText(value == null ? null : value.toString());
+			try {
+				// If it's a searchable node, add a special icon indicating as such.
+				if(value instanceof DefaultMutableTreeNode) {
+					Object o = ((DefaultMutableTreeNode) value).getUserObject();
+					if(o!=null && vimManagedEntityClasses.contains(o.getClass().getSimpleName())) {
+						BufferedImage image = ImageIO.read(getClass().getResourceAsStream("/searchable.png"));
+						setIcon(new ImageIcon(image));
+					}
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 			return c;
 		}
 
